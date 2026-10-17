@@ -19,6 +19,15 @@ namespace esper.elements {
         public MemberArrayElement(Container container, ElementDef def)
             : base(container, def) { }
 
+        public Element AddEntry() {
+            var entry = maDef.memberDef.NewElement(this);
+            entry.Initialize();
+            if (entry is MemberUnionElement union &&
+                union.elements.SingleOrDefault() is Container unionValue)
+                return unionValue;
+            return entry;
+        }
+
         public override void Initialize() {
             var e = maDef.memberDef.NewElement(this);
             e.Initialize();

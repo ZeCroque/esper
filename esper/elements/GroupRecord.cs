@@ -54,6 +54,19 @@ namespace esper.elements {
             header = new TES4GroupHeader(label, def.groupType);
         }
 
+        public MainRecord CreateRecord(Signature signature, UInt32 formId) {
+            var recordDef = groupDef.childDefs
+                .OfType<MainRecordDef>()
+                .SingleOrDefault(def => def.signature == signature);
+            if (recordDef == null)
+                throw new Exception($"Group {name} does not support record {signature}.");
+
+            var record = new MainRecord(this, recordDef, formId);
+            record.Initialize();
+            file.IndexRecord(record);
+            return record;
+        }
+
         public override bool SupportsSignature(Signature sig) {
             return groupDef.signature == sig;
         }

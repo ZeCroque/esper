@@ -83,6 +83,23 @@ namespace esper.plugins {
             return pluginDef.IsTopGroup(sig);
         }
 
+        public GroupRecord GetOrCreateTopGroup(Signature signature) {
+            var group = elements.OfType<GroupRecord>()
+                .FirstOrDefault(element =>
+                    element.groupDef.isTopGroup &&
+                    element.groupDef.signature == signature);
+            if (group != null) return group;
+
+            var groupDef = pluginDef.childDefs
+                .OfType<GroupDef>()
+                .SingleOrDefault(def =>
+                    def.isTopGroup && def.signature == signature);
+            if (groupDef == null)
+                throw new Exception($"Plugin does not support top group {signature}.");
+
+            return new GroupRecord(this, groupDef, signature.bytes);
+        }
+
         public override bool Remove() {
             throw new Exception("Cannot remove plugin files.");
         }

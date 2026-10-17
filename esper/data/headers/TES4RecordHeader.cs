@@ -12,6 +12,13 @@ namespace esper.data.headers {
         public UInt32 flags { get; }
         public UInt32 formId { get; }
 
+        public TES4RecordHeader(Signature signature, UInt32 formId) {
+            this.signature = signature;
+            dataSize = 0;
+            flags = 0;
+            this.formId = formId;
+        }
+
         public TES4RecordHeader(PluginFileSource source) {
             signature = Signature.Read(source);
             dataSize = source.reader.ReadUInt32();

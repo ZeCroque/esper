@@ -19,6 +19,10 @@ namespace esper.defs {
             unordered = src.Value<bool>("unordered");
         }
 
+        public override Element NewElement(Container container = null) {
+            return new MemberStructElement(container, this);
+        }
+
         public override Element PrepareElement(Container container) {
             return new MemberStructElement(container, this);
         }

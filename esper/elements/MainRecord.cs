@@ -102,8 +102,46 @@ namespace esper.elements {
         public MainRecord(Container container, ElementDef def)
             : base(container, def) { }
 
+        public MainRecord(Container container, MainRecordDef def, UInt32 formId)
+            : base(container, def) {
+            _file = container.file;
+            header = new TES4RecordHeader(def.signature, formId);
+            _internalElements = new List<Element>();
+
+            var headerElement = (StructElement)mrDef.headerDef.NewElement(this);
+            foreach (var elementDef in mrDef.headerDef.elementDefs) {
+                var element = elementDef.NewElement(headerElement);
+                switch (elementDef.name) {
+                    case "Signature":
+                        ((ValueElement)element).value = def.signature.ToString();
+                        break;
+                    case "FormID":
+                        ((ValueElement)element).data = new FormId(_file, formId);
+                        break;
+                    default:
+                        element.Initialize();
+                        break;
+                }
+            }
+        }
+
         public override void Initialize() {
             mrDef.InitElement(this);
+        }
+
+        internal override AssignmentInfo GetAssignment(ElementDef childDef) {
+            var newOrder = mrDef.memberDefs.IndexOf(childDef);
+            if (newOrder < 0)
+                throw new Exception($"Element {childDef.name} is not supported by record {signature}.");
+
+            var info = new AssignmentInfo { index = 1 };
+            while (info.index < internalElements.Count) {
+                var currentOrder = mrDef.memberDefs.IndexOf(internalElements[info.index].def);
+                if (currentOrder == newOrder) info.assigned = true;
+                if (currentOrder >= newOrder) return info;
+                info.index++;
+            }
+            return info;
         }
 
         public MainRecord(Container container, ElementDef def, PluginFileSource source, TES4RecordHeader header)
