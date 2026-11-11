@@ -1,11 +1,11 @@
 ﻿using esper.data;
 using esper.elements;
 using esper.plugins;
-using Ionic.Zlib;
+using System.IO.Compression;
 using System.Text;
 
 namespace esper.io {
-    public class PluginFileOutput {
+    public class PluginFileOutput : IDisposable {
         private readonly FileStream fileStream;
         private readonly BinaryWriter fileWriter;
         private Stream compressedStream;
@@ -22,12 +22,12 @@ namespace esper.io {
         internal PluginFileOutput(string filePath, PluginFile plugin) {
             this.filePath = filePath;
             this.plugin = plugin;
-            fileStream = File.OpenWrite(filePath);
+            fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None);
             fileWriter = new BinaryWriter(fileStream);
         }
 
         internal void WriteSignature(Signature sig) {
-            fileWriter.Write(sig.bytes);
+            writer.Write(sig.bytes);
         }
 
         internal void WriteString(string s, bool includeTerminator = false) {
@@ -71,18 +71,18 @@ namespace esper.io {
             compressedStream.Position = 0;
             var reader = new BinaryReader(compressedStream);
             var bytes = reader.ReadBytes((int)compressedDataSize);
-            var zstream = new ZlibStream(fileStream, CompressionMode.Compress);
-            var zwriter = new BinaryWriter(zstream);
-            zwriter.Write(bytes);
+            using (var zstream = new ZLibStream(fileStream, CompressionMode.Compress, leaveOpen: true))
+                zstream.Write(bytes, 0, bytes.Length);
         }
 
         internal void DiscardCompressedStream() {
+            compressedWriter?.Dispose();
+            compressedStream?.Dispose();
             compressedStream = null;
             compressedWriter = null;
         }
 
-        internal void WriteRecordData(MainRecord rec, Action callback) {
-            var compressed = rec.compressed;
+        internal void WriteRecordData(bool compressed, Action callback) {
             if (compressed) StartCompression();
             try {
                 callback();
@@ -90,6 +90,11 @@ namespace esper.io {
             } finally {
                 DiscardCompressedStream();
             }
+        }
+
+        public void Dispose() {
+            DiscardCompressedStream();
+            fileWriter.Dispose();
         }
     }
 }

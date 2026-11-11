@@ -48,6 +48,12 @@ namespace esper.io {
             writer.Write(reader.ReadBytes(size));
         }
 
+        internal void Close() {
+            reader.Dispose();
+            fileStream.Dispose();
+            file.Dispose();
+        }
+
         internal Signature PeekSignature() {
             var pos = stream.Position;
             var sig = Signature.Read(this);

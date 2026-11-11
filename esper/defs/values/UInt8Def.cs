@@ -27,7 +27,7 @@ namespace esper.defs {
             element._data = sessionOptions.clampIntegerValues
                 ? DataHelpers.ClampToUInt8(data)
                 : (byte)data;
-            element.SetState(ElementState.Modified);
+            element.MarkModified();
         }
 
         internal override void WriteData(

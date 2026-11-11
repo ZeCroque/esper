@@ -121,7 +121,14 @@ namespace esper.elements {
         internal virtual void ElementsReady() { }
 
         internal virtual void WriteTo(PluginFileOutput output) {
+            long start = output.stream.Position;
             def.WriteElement(this, output);
+            if (!(this is MainRecord) && def.IsSubrecord()) {
+                long actual = output.stream.Position - start;
+                long expected = size + (size - 6 > UInt16.MaxValue ? 10L : 0L);
+                if (actual != expected)
+                    throw new InvalidDataException($"Subrecord {signature} has inconsistent size: expected {expected}, wrote {actual} bytes.");
+            }
         }
 
         public virtual bool Remove() {

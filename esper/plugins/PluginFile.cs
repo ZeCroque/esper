@@ -44,11 +44,41 @@ namespace esper.plugins {
 
         public void Save(string filePath) {
             this.CheckMasters();
-            this.UpdateMastersElement();
-            var output = new PluginFileOutput(filePath, this);
-            WriteTo(output);
-            output.stream.Flush();
-            output.stream.Close();
+            if (mastersChanged)
+                throw new NotSupportedException("Saving after changing masters is not supported; master headers and references cannot yet be rewritten safely.");
+            if (source != null && string.Equals(Path.GetFullPath(filePath),
+                    Path.GetFullPath(source.filePath), StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Save to a different file while the source plugin is loaded.");
+            uint entryCount = CountEntries(this);
+            if (recordCount != entryCount)
+                header.SetData(@"HEDR\Number of Records", entryCount);
+            uint nextObjectId = header.GetData<uint>(@"HEDR\Next Object ID");
+            uint highestLocalId = records.Where(r => r.local).Select(r => r.localFormId).DefaultIfEmpty(0u).Max();
+            if (highestLocalId >= nextObjectId) {
+                if (highestLocalId >= 0xFFFFFF)
+                    throw new InvalidDataException("No local FormIDs remain available.");
+                header.SetData(@"HEDR\Next Object ID", highestLocalId + 1);
+            }
+            string destination = Path.GetFullPath(filePath);
+            string temporary = destination + "." + Guid.NewGuid().ToString("N") + ".tmp";
+            try {
+                using (var output = new PluginFileOutput(temporary, this))
+                    WriteTo(output);
+                File.Move(temporary, destination, true);
+            } finally {
+                if (File.Exists(temporary)) File.Delete(temporary);
+            }
+        }
+
+        private static uint CountEntries(Container container) {
+            uint count = 0;
+            foreach (var element in container.elements) {
+                if (element is GroupRecord group)
+                    count = checked(count + 1 + CountEntries(group));
+                else if (element is MainRecord && !(container is PluginFile))
+                    count = checked(count + 1);
+            }
+            return count;
         }
 
         internal bool UseDLStrings(Signature rSig, Signature eSig) {

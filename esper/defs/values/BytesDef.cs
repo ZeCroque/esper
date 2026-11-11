@@ -38,6 +38,7 @@ namespace esper.defs {
             if (!isVariableSize && data.Length != fixedSize)
                 throw new Exception("Bytes size mismatch");
             element._data = data;
+            element.MarkModified();
         }
 
         public override string GetValue(ValueElement element) {

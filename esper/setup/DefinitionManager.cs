@@ -37,6 +37,7 @@ namespace esper.setup {
             var defsFileName = game.abbreviation + ".json";
             session.logger.Info($"Loading definitions from {defsFileName}");
             definitions = IOHelpers.LoadDefinitions(defsFileName);
+            if (game.defsNamespace == "FO4") esper.defs.FO4.DefinitionPatches.Apply(definitions);
         }
 
         private void BuildDefs() {
@@ -67,8 +68,11 @@ namespace esper.setup {
             recordDefMap[sig.v] = (ElementDef)BuildDef((JObject)src);
         }
 
-        private void LoadDefClass(Type type) {
+        private void LoadDefClass(Type type, string gameDefsNamespace) {
             var info = type.GetField("defId");
+            // classes in a game sub-namespace (e.g. FO4.Formats) can reuse the defId of the TES5 class they extend
+            if (info == null && type.Namespace != gameDefsNamespace)
+                info = type.GetField("defId", BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy);
             if (info == null) return;
             string key = (string)info.GetValue(null);
             defClasses[key] = type;
@@ -79,11 +83,11 @@ namespace esper.setup {
             deciders[key] = (Decider)Activator.CreateInstance(type);
         }
 
-        private void LoadClass(Type type) {
+        private void LoadClass(Type type, string gameDefsNamespace) {
             if (typeof(GroupDef).IsAssignableFrom(type)) {
                 groupManager.LoadGroupDefClass(type);
             } else if (typeof(Def).IsAssignableFrom(type)) {
-                LoadDefClass(type);
+                LoadDefClass(type, gameDefsNamespace);
             } else if (typeof(Decider).IsAssignableFrom(type)) {
                 LoadDecider(type);
             }
@@ -93,9 +97,10 @@ namespace esper.setup {
             var gameDefsNamespace = "esper.defs." + game.defsNamespace;
             var types = ReflectionHelpers.GetClasses((Type t) => {
                 return t.Namespace == "esper.defs" ||
-                    t.Namespace == gameDefsNamespace;
+                    t.Namespace == gameDefsNamespace ||
+                    (t.Namespace?.StartsWith(gameDefsNamespace + ".") ?? false);
             });
-            foreach (var type in types) LoadClass(type);
+            foreach (var type in types) LoadClass(type, gameDefsNamespace);
         }
 
         internal JObject MergeDef(JObject target, JObject src) {

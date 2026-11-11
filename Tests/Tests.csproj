@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
 
     <IsPackable>false</IsPackable>
   </PropertyGroup>
@@ -19,7 +19,11 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="COPY &quot;$(SolutionDir)definitions.zip&quot; &quot;$(TargetDir)&quot; /Y&#xD;&#xA;XCOPY &quot;$(SolutionDir)fixtures&quot; &quot;$(TargetDir)\fixtures\&quot; /S /Y" />
+    <ItemGroup>
+      <TestFixtures Include="$(MSBuildThisFileDirectory)..\fixtures\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)..\definitions.zip" DestinationFolder="$(TargetDir)" />
+    <Copy SourceFiles="@(TestFixtures)" DestinationFiles="@(TestFixtures->'$(TargetDir)fixtures\%(RecursiveDir)%(Filename)%(Extension)')" />
   </Target>
 
 </Project>

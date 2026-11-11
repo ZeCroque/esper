@@ -23,15 +23,15 @@ namespace esper.defs {
             _canContainFormIds = elementDefs.Any(d => d.canContainFormIds);
         }
 
-        public ElementDef ResolveDef(Container container) {
-            var index = decider.Decide(container);
+        public ElementDef ResolveDef(Container container, UInt32? dataSize = null) {
+            var index = decider.Decide(container, dataSize);
             return elementDefs[index];
         }
 
         public override Element ReadElement(
             Container container, DataSource source, UInt32? dataSize = null
         ) {
-            var resolvedDef = ResolveDef(container);
+            var resolvedDef = ResolveDef(container, dataSize);
             if (!IsSubrecord() && resolvedDef is ValueDef valueDef) {
                 return new UnionValueElement(container, valueDef, this) {
                     _data = valueDef.ReadData(source, dataSize)

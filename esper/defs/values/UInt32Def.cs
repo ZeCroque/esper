@@ -29,7 +29,7 @@ namespace esper.defs {
             element._data = sessionOptions.clampIntegerValues
                 ? DataHelpers.ClampToUInt32(data)
                 : (UInt32)data;
-            element.SetState(ElementState.Modified);
+            element.MarkModified();
         }
 
         internal override void WriteData(

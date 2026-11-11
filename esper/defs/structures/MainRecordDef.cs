@@ -106,14 +106,22 @@ namespace esper.defs {
         }
 
         internal void ReadElements(MainRecord rec, PluginFileSource source) {
+            var states = new List<(Element element, ElementState state)>();
+            for (Element current = rec; current != null; current = current.container)
+                states.Add((current, current.state));
             rec._internalElements = new List<Element>();
             rec._unexpectedSubrecords = new List<Subrecord>();
-            InitContainedInElements(rec);
-            ReadHeader(rec, source);
-            source.WithRecordData(rec, () => {
-                ReadSubrecords(rec, rec.recordSource);
-                rec.ElementsReady();
-            });
+            try {
+                InitContainedInElements(rec);
+                ReadHeader(rec, source);
+                source.WithRecordData(rec, () => {
+                    ReadSubrecords(rec, rec.recordSource);
+                    rec.ElementsReady();
+                });
+            } finally {
+                foreach (var (element, state) in states)
+                    element.state = state;
+            }
         }
 
         internal void InitElement(MainRecord rec) {
@@ -149,12 +157,20 @@ namespace esper.defs {
         internal void WriteElementsTo(MainRecord rec, PluginFileOutput output) {
             int index = GetFirstRealElementIndex(rec);
             var headerElement = rec._internalElements[index - 1];
-            UpdateDataSize(headerElement, rec.size);
+            long start = output.stream.Position;
             headerElement.WriteTo(output);
-            output.WriteRecordData(rec, () => {
+            long bodyStart = output.stream.Position;
+            bool compressed = (headerElement.GetData<uint>("Record Flags") & (1u << 18)) != 0;
+            output.WriteRecordData(compressed, () => {
                 for (; index < rec._internalElements.Count; index++)
                     rec._internalElements[index].WriteTo(output);
             });
+            long end = output.stream.Position;
+            UInt32 dataSize = checked((UInt32)(end - bodyStart));
+            UpdateDataSize(headerElement, dataSize);
+            output.stream.Position = start + 4;
+            output.writer.Write(dataSize);
+            output.stream.Position = end;
         }
 
         internal void WriteSourceTo(MainRecord rec, PluginFileOutput output) {
@@ -169,13 +185,16 @@ namespace esper.defs {
         ) {
             var rec = (MainRecord)element;
             var file = rec._file;
+            if (rec.bodyOffset > 0 && !file.mastersChanged &&
+                (rec.state & ElementState.Modified) == 0) {
+                WriteSourceTo(rec, output);
+                return;
+            }
             if (rec._internalElements == null) {
-                if (!file.mastersChanged) {
-                    WriteSourceTo(rec, output);
-                    return;
-                }
                 ReadElements(rec, file.source);
             }
+            if (rec._unexpectedSubrecords != null && rec._unexpectedSubrecords.Count > 0)
+                throw new InvalidDataException($"Cannot save modified {rec.signature} {rec.fileFormId:X8}: unrecognized subrecords would be lost.");
             WriteElementsTo(rec, output);
         }
 

@@ -21,9 +21,16 @@ namespace esper.defs {
 
         public ElementDef GetMemberDef(Signature signature, ref int defIndex) {
             if (!signatures.Contains(signature)) return null;
-            for (; defIndex < memberDefs.Count; defIndex++) {
-                var memberDef = memberDefs[defIndex];
-                if (memberDef.ContainsSignature(signature)) return memberDef;
+            for (int i = defIndex; i < memberDefs.Count; i++) {
+                if (!memberDefs[i].ContainsSignature(signature)) continue;
+                defIndex = i;
+                return memberDefs[i];
+            }
+            // plugins don't always follow the order of the definitions
+            for (int i = 0; i < defIndex; i++) {
+                if (!memberDefs[i].ContainsSignature(signature)) continue;
+                defIndex = i;
+                return memberDefs[i];
             }
             return null;
         }

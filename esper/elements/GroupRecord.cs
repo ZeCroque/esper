@@ -108,9 +108,14 @@ namespace esper.elements {
         }
 
         internal override void WriteTo(PluginFileOutput output) {
-            header.groupSize = size;
+            long start = output.stream.Position;
             header.WriteTo(output);
             output.WriteContainer(this);
+            long end = output.stream.Position;
+            header.groupSize = checked((UInt32)(end - start));
+            output.stream.Position = start + 4;
+            output.writer.Write(header.groupSize);
+            output.stream.Position = end;
         }
 
         internal override Element CreateDefault() {

@@ -47,8 +47,14 @@ namespace esper.defs {
             Element element, PluginFileOutput output
         ) {
             if (!IsSubrecord()) return;
+            UInt32 bodySize = checked(element.def.GetSize(element) - 6);
+            if (bodySize > UInt16.MaxValue) {
+                output.WriteSignature(Signatures.XXXX);
+                output.writer.Write((UInt16)4);
+                output.writer.Write(bodySize);
+            }
             output.WriteSignature(_signature);
-            output.writer.Write((UInt16)(element.def.GetSize(element) - 6));
+            output.writer.Write(bodySize > UInt16.MaxValue ? (UInt16)0 : (UInt16)bodySize);
         }
     }
 }

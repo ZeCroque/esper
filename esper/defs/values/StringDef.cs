@@ -48,9 +48,10 @@ namespace esper.defs {
             string str = (string)data;
             if (str == null)
                 throw new Exception("Data must be a string");
-            if (!isVariableSize && str.Length != fixedSize)
+            if (fixedSize != null && sessionOptions.encoding.GetByteCount(str) != fixedSize)
                 throw new Exception("String length does not match");
             element._data = str;
+            element.MarkModified();
         }
 
         public override string GetValue(ValueElement element) {
@@ -83,7 +84,7 @@ namespace esper.defs {
                 if (prefix != null) size += (UInt32)prefix;
                 if (padding != null) size += (UInt32)padding;
                 if (isVariableSize) size += 1;
-                return (UInt32)(size + s.Length);
+                return (UInt32)(size + sessionOptions.encoding.GetByteCount(s));
             }
         }
 
@@ -95,7 +96,7 @@ namespace esper.defs {
             } else {
                 var s = element.data as string ?? DefaultData();
                 if (prefix != null)
-                    output.WritePrefix(s.Length, (int)prefix, padding ?? 0);
+                    output.WritePrefix(output.stringEncoding.GetByteCount(s), (int)prefix, padding ?? 0);
                 output.WriteString(s, isVariableSize);
             }
         }

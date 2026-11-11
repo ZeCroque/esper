@@ -1,4 +1,4 @@
-﻿using esper.setup;
+using esper.setup;
 
 namespace esper.defs.FO4.Formats {
     public class _180DivPiFormat : TES5._180DivPiFormat {
@@ -93,6 +93,81 @@ namespace esper.defs.FO4.Formats {
 
     public class VertexFormat : TES5.VertexFormat {
         internal VertexFormat(DefinitionManager manager, JObject src)
+            : base(manager, src) { }
+    }
+
+    public class CTDAParam1StringFormat : TES5.CTDAParam1StringFormat {
+        internal CTDAParam1StringFormat(DefinitionManager manager, JObject src)
+            : base(manager, src) { }
+    }
+
+    public class CTDAParam2QuestStageFormat : TES5.CTDAParam2QuestStageFormat {
+        internal CTDAParam2QuestStageFormat(DefinitionManager manager, JObject src)
+            : base(manager, src) { }
+    }
+
+    public class CTDAParam2StringFormat : TES5.CTDAParam2StringFormat {
+        internal CTDAParam2StringFormat(DefinitionManager manager, JObject src)
+            : base(manager, src) { }
+    }
+
+    public class ConditionAliasFormat : TES5.ConditionAliasFormat {
+        internal ConditionAliasFormat(DefinitionManager manager, JObject src)
+            : base(manager, src) { }
+    }
+
+    public class Edge0Format : TES5.Edge0Format {
+        internal Edge0Format(DefinitionManager manager, JObject src)
+            : base(manager, src) { }
+    }
+
+    public class Edge1Format : TES5.Edge1Format {
+        internal Edge1Format(DefinitionManager manager, JObject src)
+            : base(manager, src) { }
+    }
+
+    public class Edge2Format : TES5.Edge2Format {
+        internal Edge2Format(DefinitionManager manager, JObject src)
+            : base(manager, src) { }
+    }
+
+    public class PackageLocationAliasFormat : TES5.PackageLocationAliasFormat {
+        internal PackageLocationAliasFormat(DefinitionManager manager, JObject src)
+            : base(manager, src) { }
+    }
+
+    public class PerkDATAQuestStageFormat : TES5.PerkDATAQuestStageFormat {
+        internal PerkDATAQuestStageFormat(DefinitionManager manager, JObject src)
+            : base(manager, src) { }
+    }
+
+    public class QuestAliasFormat : TES5.QuestAliasFormat {
+        internal QuestAliasFormat(DefinitionManager manager, JObject src)
+            : base(manager, src) { }
+    }
+
+    public class QuestExternalAliasFormat : TES5.QuestExternalAliasFormat {
+        internal QuestExternalAliasFormat(DefinitionManager manager, JObject src)
+            : base(manager, src) { }
+    }
+
+    public class ScriptObjectAliasFormat : TES5.ScriptObjectAliasFormat {
+        internal ScriptObjectAliasFormat(DefinitionManager manager, JObject src)
+            : base(manager, src) { }
+    }
+
+    public class Vertex0Format : TES5.Vertex0Format {
+        internal Vertex0Format(DefinitionManager manager, JObject src)
+            : base(manager, src) { }
+    }
+
+    public class Vertex1Format : TES5.Vertex1Format {
+        internal Vertex1Format(DefinitionManager manager, JObject src)
+            : base(manager, src) { }
+    }
+
+    public class Vertex2Format : TES5.Vertex2Format {
+        internal Vertex2Format(DefinitionManager manager, JObject src)
             : base(manager, src) { }
     }
 }

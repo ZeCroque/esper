@@ -150,6 +150,7 @@ namespace esper.setup {
             DestroyRefBy(plugin);
             plugins.Remove(plugin);
             MakeSlotsDumb(plugin);
+            plugin.source?.Close();
         }
     }
 }
