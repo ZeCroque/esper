@@ -17,6 +17,7 @@ namespace esper.resolution {
             new ResolveByIndex(),
             new ResolveFirst(),
             new ResolveBySignature(),
+            new CreateByDefault(),
             new ResolveByName()
         };
 
